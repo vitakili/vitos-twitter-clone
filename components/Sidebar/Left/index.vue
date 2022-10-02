@@ -88,7 +88,7 @@
           class="w-10 h-10 rounded-full"
         />
         <div class="flex-col hidden ml-2 xl:block">
-          <h1 class="text-sm font-bold text-gray-800 dark:text-white">{{ user.username }}</h1>
+          <h1 class="text-sm font-bold text-gray-800 dark:text-white">{{ user.name }}</h1>
           <p class="text-sm text-gray-400">
             {{user.handle}}
           </p>
