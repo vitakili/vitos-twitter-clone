@@ -1,157 +1,161 @@
-import jwt_decode from "jwt-decode"
+import jwt_decode from "jwt-decode";
 
 export default () => {
-    const useAuthToken = () => useState('auth_token')
-    const useAuthUser = () => useState('auth_user')
-    const useAuthLoading = () => useState('auth_loading', () => true)
+  const useAuthToken = () => useState("auth_token");
+  const useAuthUser = () => useState("auth_user");
+  const useAuthLoading = () => useState("auth_loading", () => true);
 
-    const setToken = (newToken) => {
-        const authToken = useAuthToken()
-        authToken.value = newToken
-    }
+  const setToken = (newToken) => {
+    const authToken = useAuthToken();
+    authToken.value = newToken;
+  };
 
-    const setUser = (newUser) => {
-        const authUser = useAuthUser()
-        authUser.value = newUser
-    }
+  const setUser = (newUser) => {
+    const authUser = useAuthUser();
+    authUser.value = newUser;
+  };
 
-    const setIsAuthLoading = (value) => {
-        const authLoading = useAuthLoading()
-        authLoading.value = value
-    }
+  const setIsAuthLoading = (value) => {
+    const authLoading = useAuthLoading();
+    authLoading.value = value;
+  };
 
-    const login = ({ username, password }) => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const data = await $fetch('/api/auth/login', {
-                    method: 'POST',
-                    body: {
-                        username,
-                        password
-                    }
-                })
+  const login = ({ username, password }) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const data = await $fetch("/api/auth/login", {
+          method: "POST",
+          body: {
+            username,
+            password,
+          },
+        });
 
-                setToken(data.access_token)
-                setUser(data.user)
+        setToken(data.access_token);
+        setUser(data.user);
 
-                resolve(true)
-            } catch (error) {
-                reject(error)
-            }
-        })
-    }
+        resolve(true);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
 
-    const register = ({ username, name, email, password, repeatPassword }) => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const data = await $fetch('/api/auth/register', {
-                    method: 'POST',
-                    body: {
-                        username,
-                        name,
-                        email,
-                        password,
-                        repeatPassword
-                    }
-                })
+  const register = ({ username, name, email, password, repeatPassword }) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const data = await $fetch("/api/auth/register", {
+          method: "POST",
+          body: {
+            username,
+            name,
+            email,
+            password,
+            repeatPassword,
+          },
+        });
 
-                setToken(data.access_token)
-                setUser(data.user)
-
-                resolve(true)
-            } catch (error) {
-                reject(error)
-            } finally {
-                login({username, password})
-            }
-        })
-    }
-
-    const refreshToken = () => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const data = await $fetch('/api/auth/refresh')
-
-                setToken(data.access_token)
-                resolve(true)
-            } catch (error) {
-                reject(error)
-            }
-        })
-    }
-
-    const getUser = () => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                const data = await useFetchApi('/api/auth/user')
-
-                setUser(data.user)
-                resolve(true)
-            } catch (error) {
-                reject(error)
-            }
-        })
-    }
-
-    const reRefreshAccessToken = () => {
-        const authToken = useAuthToken()
-
-        if (!authToken.value) {
-            return
+        setToken(data.access_token);
+        setUser(data.user);
+        resolve(true);
+        if (resolve === true) {
+          try {
+            login({ username, password });
+          } catch (error) {
+            reject(error);
+          }
         }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
 
-        const jwt = jwt_decode(authToken.value)
+  const refreshToken = () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const data = await $fetch("/api/auth/refresh");
 
-        const newRefreshTime = jwt.exp - 60000
+        setToken(data.access_token);
+        resolve(true);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
 
-        setTimeout(async () => {
-            await refreshToken()
-            reRefreshAccessToken()
-        }, newRefreshTime);
+  const getUser = () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const data = await useFetchApi("/api/auth/user");
+
+        setUser(data.user);
+        resolve(true);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  const reRefreshAccessToken = () => {
+    const authToken = useAuthToken();
+
+    if (!authToken.value) {
+      return;
     }
 
-    const initAuth = () => {
-        return new Promise(async (resolve, reject) => {
-            setIsAuthLoading(true)
-            try {
-                await refreshToken()
-                await getUser()
+    const jwt = jwt_decode(authToken.value);
 
-                reRefreshAccessToken()
+    const newRefreshTime = jwt.exp - 60000;
 
-                resolve(true)
-            } catch (error) {
-                console.log(error)
-                reject(error)
-            } finally {
-                setIsAuthLoading(false)
-            }
-        })
-    }
+    setTimeout(async () => {
+      await refreshToken();
+      reRefreshAccessToken();
+    }, newRefreshTime);
+  };
 
-    const logout = () => {
-        return new Promise(async (resolve, reject) => {
-            try {
-                await useFetchApi('/api/auth/logout', {
-                    method: 'POST'
-                })
+  const initAuth = () => {
+    return new Promise(async (resolve, reject) => {
+      setIsAuthLoading(true);
+      try {
+        await refreshToken();
+        await getUser();
 
-                setToken(null)
-                setUser(null)
-                resolve()
-            } catch (error) {
-                reject(error)
-            }
-        })
-    }
+        reRefreshAccessToken();
 
-    return {
-        login,
-        register,
-        useAuthUser,
-        useAuthToken,
-        initAuth,
-        useAuthLoading,
-        logout
-    }
-}
+        resolve(true);
+      } catch (error) {
+        console.log(error);
+        reject(error);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    });
+  };
+
+  const logout = () => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        await useFetchApi("/api/auth/logout", {
+          method: "POST",
+        });
+
+        setToken(null);
+        setUser(null);
+        resolve();
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  return {
+    login,
+    register,
+    useAuthUser,
+    useAuthToken,
+    initAuth,
+    useAuthLoading,
+    logout,
+  };
+};

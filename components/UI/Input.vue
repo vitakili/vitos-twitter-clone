@@ -8,10 +8,17 @@
     >
     <input
       :value="props.modelValue" @input="event => emits('update:modelValue', event.target.value)"
-      class="block px-4 w-full border-gray-300 rounded-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+      class="block px-4 w-full rounded-full shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm focus:bg-blue-50"
       :type="props.type"
+      :class="[props.error ? 'border-red-500 bg-red-100': 'border-gray-300']"
       :placeholder="props.placeholder"
     />
+  </div>
+  <div v-if="props.error"
+    class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800"
+    role="alert"
+  >
+    {{ props.error }}
   </div>
 </template>
 
@@ -34,6 +41,11 @@ const props = defineProps({
   placeholder: {
     type: String,
     default: null
+  },
+  error: {
+    type: String,
+    default: ''
   }
 });
+console.log(props.errors)
 </script>

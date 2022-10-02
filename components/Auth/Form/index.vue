@@ -6,7 +6,7 @@
       </div>
     </div>
 
-    <AuthFormLog  v-if="formToggle == true" />
+    <AuthFormLog  v-if="formToggle == false" />
     <AuthFormReg v-else />
     </div>
 </template>
