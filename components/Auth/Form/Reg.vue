@@ -62,6 +62,7 @@
   </form>
 </template>
 <script setup>
+import {watch, ref} from 'vue'
 const emitter = useEmitter();
 
 const data = reactive({
@@ -79,39 +80,39 @@ const validEmail = (email) => {
     /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(email);
 };
-
+watch(data, (newData, oldData) => {
+   if (!newData.username) {
+    newData.errors.username = "Username required.";
+  } else {
+    newData.errors.username = "";
+  }
+  if (!oldData.name) {
+    newData.errors.name = "Name required.";
+  } else {
+    newData.errors.name = "";
+  }
+  if (!newData.email) {
+    newData.errors.email = "Email required.";
+  } else if (!validEmail(newData.email)) {
+    newData.errors.email = "Valid email required.";
+  } else {
+    newData.errors.email = "";
+  }
+  if (!newData.password) {
+    newData.errors.password = "Password is required.";
+  } else if (newData.password.length < 8) {
+    danewDatata.errors.password = "Password must be 8 characters long.";
+  } else {
+    newData.errors.password = "";
+  }
+  if (newData.repeatPassword !== newData.password) {
+    newData.errors.repeatPassword = "Passwords do not match.";
+  } else {
+    newData.errors.repeatPassword = "";
+  }
+})
 async function handleRegister() {
-  if (!data.username) {
-    data.errors.username = "Username required.";
-  } else {
-    data.errors.username = "";
-  }
-  if (!data.name) {
-    data.errors.name = "Name required.";
-  } else {
-    data.errors.name = "";
-  }
-  if (!data.email) {
-    data.errors.email = "Email required.";
-  } else if (!validEmail(data.email)) {
-    data.errors.email = "Valid email required.";
-  } else {
-    data.errors.email = "";
-  }
-
-  if (data.password == "") {
-    data.errors.password = "Password is required.";
-  } else if (data.password.length < 8) {
-    data.errors.password = "Password must be 8 characters long.";
-  } else {
-    data.errors.password = "";
-  }
-  if (data.repeatPassword !== data.password) {
-    data.errors.repeatPassword = "Passwords do not match.";
-  } else {
-    data.errors.repeatPassword = "";
-  }
-  const { register } = useAuth();
+  const { register, login } = useAuth();
   data.loading = true;
   try {
     await register({
@@ -121,6 +122,14 @@ async function handleRegister() {
       password: data.password,
       repeatPassword: data.repeatPassword,
     });
+    try{
+      await login({
+        username: data.username,
+        password: data.password
+      })
+    } catch (error) {
+      console.log(error);
+    }
   } catch (error) {
     console.log(error);
     data.errors;
